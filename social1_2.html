@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>5학년 1학기 사회 [2단원: 우리나라 지리 탐구] 종합 퀴즈</title>
+    <style>
+        :root {
+            --primary: #4A90E2;
+            --primary-dark: #357ABD;
+            --success: #2ECC71;
+            --danger: #E74C3C;
+            --background: #F5F7FA;
+            --card-bg: #FFFFFF;
+            --text: #2C3E50;
+        }
+        
+        * { box-sizing: border-box; font-family: 'Malgun Gothic', sans-serif; }
+        body { background-color: var(--background); color: var(--text); margin: 0; padding: 20px; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+        .quiz-container { background: var(--card-bg); width: 100%; max-width: 700px; padding: 30px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.08); }
+        h1 { text-align: center; color: var(--primary); font-size: 24px; margin-bottom: 5px; }
+        .subtitle { text-align: center; color: #7F8C8D; font-size: 14px; margin-bottom: 25px; }
+        .progress-bar { width: 100%; height: 10px; background-color: #ECF0F1; border-radius: 5px; margin-bottom: 25px; overflow: hidden; }
+        .progress { height: 100%; background-color: var(--primary); width: 0%; transition: width 0.3s ease; }
+        .stats { display: flex; justify-content: space-between; font-weight: bold; margin-bottom: 15px; font-size: 16px; }
+        .question-box { font-size: 18px; font-weight: bold; line-height: 1.6; margin-bottom: 25px; min-height: 60px; white-space: pre-line; }
+        .options-container { display: flex; flex-direction: column; gap: 12px; }
+        .option-btn { background: #F8F9FA; border: 2px solid #E2E8F0; border-radius: 12px; padding: 15px 20px; font-size: 16px; text-align: left; cursor: pointer; transition: all 0.2s; font-weight: 500; -webkit-tap-highlight-color: transparent; }
+        .option-btn:hover { background: #EDF2F7; border-color: #CBD5E0; }
+        .option-btn.correct { background-color: #D4EDDA !important; border-color: var(--success) !important; color: #155724; font-weight: bold; }
+        .option-btn.wrong { background-color: #F8D7DA !important; border-color: var(--danger) !important; color: #721C24; }
+        .hint-box { margin-top: 15px; padding: 12px; border-radius: 10px; background-color: #FEFCBF; border: 1px dashed #D69E2E; color: #744210; font-size: 14px; display: none; }
+        .control-panel { display: flex; justify-content: space-between; margin-top: 25px; }
+        .btn { background-color: var(--primary); color: white; border: none; border-radius: 10px; padding: 12px 25px; font-size: 16px; cursor: pointer; font-weight: bold; transition: background 0.2s; }
+        .btn:hover { background-color: var(--primary-dark); }
+        .btn:disabled { background-color: #CBD5E0; cursor: not-allowed; }
+        .feedback-box { margin-top: 20px; padding: 15px; border-radius: 12px; background-color: #EBF8FF; border-left: 5px solid var(--primary); display: none; line-height: 1.5; font-size: 15px; }
+        .result-screen { text-align: center; display: none; }
+        .result-score { font-size: 48px; font-weight: bold; color: var(--primary); margin: 20px 0; }
+        .comment { font-size: 18px; line-height: 1.6; margin-bottom: 30px; }
+        [hidden] { display: none !important; }
+        .field-label { display: block; text-align: left; font-weight: 700; font-size: 14px; color: #7F8C8D; margin: 16px 0 6px; }
+        .in-field { width: 100%; padding: 14px; font-size: 18px; border: 2px solid #E2E8F0; border-radius: 12px; background: #fff; }
+        .start-msg { color: var(--danger); font-weight: 700; font-size: 14px; margin-top: 12px; }
+        .send-status { font-size: 15px; font-weight: 700; margin: 0 0 14px; line-height: 1.5; }
+        .send-status.ok { color: #1E8449; }
+        .send-status.fail { color: var(--danger); }
+        .send-status.wait { color: #7F8C8D; }
+    </style>
+</head>
+<body>
+
+<div class="quiz-container" id="quiz-app">
+    <div id="start-screen">
+        <h1>이름을 알려 주세요 ✏️</h1>
+        <div class="subtitle">5학년 사회 단원평가</div>
+        <label class="field-label" for="num-select">출석번호</label>
+        <select id="num-select" class="in-field"><option value="">번호를 골라 주세요</option></select>
+        <label class="field-label" for="name-input">이름</label>
+        <input type="text" id="name-input" class="in-field" placeholder="이름을 입력해 주세요" maxlength="10" autocomplete="off">
+        <div class="start-msg" id="start-msg" role="alert" hidden></div>
+        <button class="btn" id="start-btn" style="width:100%;margin-top:10px">시작하기 ➔</button>
+    </div>
+    <div id="game-screen" style="display:none">
+        <h1 id="main-title">지리 탐구 박사 도전! 🗺️</h1>
+        <div class="subtitle">5학년 1학기 사회: 2단원 우리나라 지리 탐구 종합 평가</div>
+        <div class="progress-bar"><div class="progress" id="progress"></div></div>
+        
+        <div class="stats">
+            <span id="question-number">문제 1 / 25</span>
+            <span id="score-display">점수: 0점</span>
+        </div>
+        
+        <div class="question-box" id="question-text">문제를 불러오는 중입니다...</div>
+        <div class="options-container" id="options-box"></div>
+        
+        <div class="hint-box" id="hint-box"></div>
+        
+        <div class="control-panel">
+            <button class="btn" id="hint-btn" onclick="showHint()">💡 힌트 보기 (-2점)</button>
+            <button class="btn" id="next-btn" onclick="nextQuestion()" disabled>다음 문제 ➔</button>
+        </div>
+
+        <div class="feedback-box" id="feedback-box"></div>
+    </div>
+
+    <div id="result-screen" class="result-screen">
+        <h1>🎉 지리 탐험 완료! 🎉</h1>
+        <div class="subtitle">우리나라 지리 탐구 최종 결과</div>
+        <div class="result-score" id="final-score">100 / 100점</div>
+        <div class="comment" id="final-comment">멋집니다!</div>
+        <div class="send-status wait" id="send-status" role="status">결과를 선생님께 보내는 중이에요...</div>
+        <button class="btn" id="retry-btn" hidden style="margin-bottom:14px">다시 보내기</button><br>
+        <button class="btn" onclick="restartGame()">다시 도전하기 🔄</button>
+    </div>
+</div>
+
+<script>
+    // 업로드된 미래엔 사회 5-1 단원평가 1, 2회 정답 및 지문을 정확히 고증하여 25문항으로 전면 개편
+    const quizData = [
+        {
+            q: "한 지역에서 오랜 기간에 걸쳐 반복하여 나타나는 평균적인 대기 상태를 뜻하는 개념은 무엇입니까?",
+            options: ["날씨", "기후", "기온", "바람"],
+            answer: 1,
+            hint: "날마다 바뀌는 대기 상태는 '날씨'라고 하며, 수십 년간 반복되는 장기적 특징을 말합니다.",
+            rationale: "기후는 오랜 기간 한 지역에 반복되어 나타나는 평균적인 대기 상태입니다."
+        },
+        {
+            q: "이른 봄철에 갑작스레 기온이 떨어져 일시적인 추위가 찾아오는 현상을 무엇이라고 합니까?",
+            options: ["열대야", "삼한사온", "꽃샘추위", "한파"],
+            answer: 2,
+            hint: "봄철에 꽃이 피는 것을 시샘하는 듯한 추위라는 뜻을 가졌습니다.",
+            rationale: "봄철 초기에 시베리아 기단의 일시적 영향으로 갑자기 추워지는 것을 꽃샘추위라고 합니다."
+        },
+        {
+            q: "우리나라의 겨울철 기후에 주로 영향을 주며, 북서쪽 대륙에서 불어오는 바람의 성질은 어떠합니까?",
+            options: ["차갑고 건조하다", "덥고 습하다", "따뜻하고 건조하다", "시원하고 습하다"],
+            answer: 0,
+            hint: "겨울철에 시베리아 대륙 쪽에서 불어오는 바람의 특성을 생각해보세요.",
+            rationale: "우리나라 겨울철에는 시베리아 대륙의 영향으로 차갑고 건조한 북서풍이 주로 붑니다."
+        },
+        {
+            q: "우리나라의 여름철 기후에 주로 영향을 주며, 남쪽 바다에서 불어오는 바람의 성질은 어떠합니까?",
+            options: ["차갑고 건조하다", "덥고 습하다", "서늘하고 건조하다", "춥고 습하다"],
+            answer: 1,
+            hint: "여름철 무더위와 장마를 몰고 오는 바다 쪽 바람의 성질입니다.",
+            rationale: "여름철에는 북태평양 고기압의 영향으로 남쪽 바다에서 덥고 습한 바람이 불어옵니다."
+        },
+        {
+            q: "우리나라의 기온 특징에 대한 설명으로 알맞지 않은 것은 어느 것입니까?",
+            options: ["계절에 따라 기온 차이가 큰 편입니다.", "북쪽에서 남쪽으로 갈수록 대체로 기온이 낮아집니다.", "겨울철 동쪽과 서쪽 지역 사이에 기온 차이가 나타납니다.", "겨울철에 남해안과 제주 지역은 비교적 따뜻합니다."],
+            answer: 1,
+            hint: "적도와 가까워질수록 따뜻해지는 지구의 특성을 생각해보세요.",
+            rationale: "우리나라는 남쪽으로 갈수록 위도가 낮아져 대체로 기온이 높아집니다."
+        },
+        {
+            q: "겨울철 서해안의 인천보다 동해안에 위치한 강릉의 기온이 대체로 더 높은 결정적인 이유는 무엇입니까?",
+            options: ["남동풍이 불어오기 때문에", "태백산맥이 차가운 북서풍을 막아 주기 때문에", "바다와 멀리 떨어져 있기 때문에", "평야 지대가 넓게 펼쳐져 있기 때문에"],
+            answer: 1,
+            hint: "차가운 겨울 바람을 뒤에서 막아주는 거대한 산맥이 동해안 서쪽에 있습니다.",
+            rationale: "강릉은 태백산맥이 차가운 북서풍을 막아주고 동해의 수온 영향으로 인천보다 겨울에 따뜻합니다."
+        },
+        {
+            q: "우리나라 강수량의 특징 중 여름철에 해당하는 모습이 아닌 것은 어느 것입니까?",
+            options: ["연 강수량의 절반 이상이 집중됩니다.", "초여름에는 장마로 여러 날에 걸쳐 비가 내립니다.", "일 년 중 강수량이 가장 적은 계절입니다.", "짧은 시간에 세차게 내리다 그치는 소나기가 자주 내립니다."],
+            answer: 2,
+            hint: "여름은 비가 집중되는 시기이며, 강수량이 가장 적은 계절은 따로 있습니다.",
+            rationale: "일 년 중 강수량이 가장 적은 계절은 겨울입니다. 여름은 강수량이 집중되는 계절입니다."
+        },
+        {
+            q: "우리나라에서 겨울철에 태백산맥 동쪽의 영동 지방, 울릉도, 제주도 지역에 공통으로 잘 나타나는 날씨 특징은 무엇입니까?",
+            options: ["가뭄이 매우 심해집니다.", "많은 눈이 내립니다.", "열대야가 수시로 발생합니다.", "황사 현상이 자주 일어납니다."],
+            answer: 1,
+            hint: "지형적 요인과 지리적 위치 때문에 이 지역들은 겨울철 폭설(대설)로 유명합니다.",
+            rationale: "울릉도, 영동 지방, 제주도 산간 등은 겨울철 지형과 바다의 영향으로 많은 눈이 내리는 다설지입니다."
+        },
+        {
+            q: "전통 가옥의 지붕을 끈으로 묶거나, 최근 해안가에 풍력 발전 시설을 많이 설치하는 제주도 특유의 기후 특징은 무엇입니까?",
+            options: ["일 년 내내 강한 바람이 많이 붑니다.", "여름에 비가 전혀 오지 않습니다.", "겨울에 영하 20도 이하로 떨어집니다.", "일 년 내내 안개가 짙게 낍니다."],
+            answer: 0,
+            hint: "지붕이 날아가는 것을 막기 위한 동아줄 묶기와 풍력 발전기의 공통 핵심 요소입니다.",
+            rationale: "제주도는 삼다도라 불릴 만큼 일 년 내내 강한 바람이 부는 기후적 특성을 가집니다."
+        },
+        {
+            q: "바람이 불고 햇볕이 잘 드는 해안가 지역에서 바닷물을 말려 소금을 생산하는 시설을 무엇이라고 합니까?",
+            options: ["양어장", "간척지", "염전", "방조제"],
+            answer: 2,
+            hint: "소금 염(鹽) 자를 사용하는 장소입니다.",
+            rationale: "강수량이 적고 햇볕이 좋은 날 해안에서 바닷물을 증발시켜 소금을 만드는 곳은 염전입니다."
+        },
+        {
+            q: "여러 가지 원인으로 기온, 강수량 등 지구 전체의 현재 기후가 점차 따뜻하게 변화하는 현상을 무엇이라고 합니까?",
+            options: ["사막화 현상", "지구 온난화(기후변화)", "엘니뇨 현상", "도심 열섬 현상"],
+            answer: 1,
+            hint: "화석 연료 사용으로 대기 중 온실가스가 증가하여 지구 평균 기온이 오르는 현상입니다.",
+            rationale: "지구 온난화는 온실가스 증가 등으로 인해 지구의 평균 기온이 지속적으로 상승하는 기후변화입니다."
+        },
+        {
+            q: "지구 온난화의 주된 원인으로 가장 알맞은 것은 어느 것입니까?",
+            options: ["산림 면적과 나무의 과도한 증가", "석탄, 석유 등 화석 연료 사용으로 인한 온실가스 증가", "일회용품 및 친환경 저탄소 제품의 사용 감소", "신재생 에너지를 통한 풍력 발전의 과도한 사용"],
+            answer: 1,
+            hint: "공장이나 자동차에서 매연과 온실 기체를 배출할 때 사용하는 연료를 생각해 보세요.",
+            rationale: "화석 연료의 무분별한 사용으로 대기 중 온실가스 양이 늘어난 것이 지구 온난화의 핵심 원인입니다."
+        },
+        {
+            q: "최근 기후변화로 인해 우리나라에 나타나는 자연 및 생활 환경의 변화로 알맞지 않은 것은 무엇입니까?",
+            options: ["여름의 길이가 늘어나고 겨울의 길이가 짧아집니다.", "봄꽃이 피는 시기가 과거에 비해 점점 빨라집니다.", "농작물의 재배 가능 지역이 점차 북쪽으로 이동합니다.", "한파와 대설의 발생 횟수가 일 년 내내 지속적으로 고정됩니다."],
+            answer: 3,
+            hint: "기후변화는 자연재해의 발생 빈도와 시기를 불규칙하고 변칙적으로 만듭니다.",
+            rationale: "기후변화는 자연재해의 잦은 발생과 불규칙한 시기 변화에 직접적인 영향을 줍니다."
+        },
+        {
+            q: "주로 여름부터 초가을 사이에 발생하며, 강한 바람과 한꺼번에 많은 비를 동반하여 도로나 건물을 파손시키는 자연 현상은 무엇입니까?",
+            options: ["가뭄", "태풍", "대설", "한파"],
+            answer: 1,
+            hint: "적도 부근 해상에서 발생해 우리나라 쪽으로 북상하며 막대한 풍수해를 입히는 현상입니다.",
+            rationale: "태풍은 여름과 초가을 사이 강풍과 폭우를 동반해 시속 수십 km로 이동하는 자연재해입니다."
+        },
+        {
+            q: "겨울철에 한꺼번에 많은 눈이 내려 도로 교통을 마비시키고 비닐하우스 등 시설물을 무너지게 하는 자연재해는 무엇입니까?",
+            options: ["호우", "폭염", "대설", "가뭄"],
+            answer: 2,
+            hint: "큰 대(大) 자에 눈 설(雪) 자를 씁니다.",
+            rationale: "대설은 짧은 시간 동안 많은 양의 눈이 내려 사회적 피해를 주는 겨울철 재해입니다."
+        },
+        {
+            q: "여름철에 발생하는 매우 심한 더위로, 온열 질환을 유발하므로 한낮 야외 활동을 피해야 하는 자연재해는 무엇입니까?",
+            options: ["황사", "호우", "폭염", "가뭄"],
+            answer: 2,
+            hint: "사나울 폭(暴) 자에 불탈 염(炎) 자를 사용하여 몹시 심한 더위를 뜻합니다.",
+            rationale: "폭염은 하루 최고 기온이 매우 높아 인명 및 가축 피해를 주는 한여름의 심한 더위입니다."
+        },
+        {
+            q: "기후변화와 자연재해에 대응하기 위한 국가, 기업, 개인의 노력으로 알맞지 않은 것은 어느 것입니까?",
+            options: ["정부와 지자체는 기후변화 대응 교육 및 안전 시설을 확충합니다.", "기업은 온실가스 배출을 줄일 수 있는 저탄소 제품을 개발합니다.", "개인은 일회용품 사용을 늘리고 에너지 소비를 극대화해야 합니다.", "국가와 개인 모두 환경 변화를 막기 위한 수칙을 함께 실천합니다."],
+            answer: 2,
+            hint: "온실가스를 줄이기 위해 일회용품 사용은 '줄여야' 합니다.",
+            rationale: "개인은 일회용품 줄이기, 대중교통 이용 등을 통해 온실가스를 감축하는 데 동참해야 합니다."
+        },
+        {
+            q: "오늘날 우리나라 총인구의 대략적인 수치와 변화 특징에 대한 설명으로 옳은 것은 무엇입니까?",
+            options: ["현재 총인구는 약 1,000만 명 미만입니다.", "과거 1960년대에 비해 현재 총인구는 절반으로 줄었습니다.", "오늘날 우리나라 총인구는 5,100만 명 이상으로 과거에 비해 늘었습니다.", "우리나라 총인구는 역사상 2023년에 가장 최고치를 기록했습니다."],
+            answer: 2,
+            hint: "우리나라 총인구는 꾸준히 성장하여 5천만 명을 돌파했으며, 정점은 2020년이었습니다.",
+            rationale: "우리나라 총인구는 5,100만 명 이상이며, 통계상 인구 정점은 2020년(5,183만 명)이었습니다."
+        },
+        {
+            q: "1960년대 이전 농업 중심 사회였던 시기에 우리나라 사람들이 주로 많이 모여 살았던 지역적 지형 특징은 무엇입니까?",
+            options: ["북동쪽의 험난한 산지 지역", "남서쪽의 농사짓기 좋은 평야 지역", "동해안의 깊은 절벽 지역", "울릉도와 독도 등 도서 지역"],
+            answer: 1,
+            hint: "벼농사를 짓기 위해서는 지형이 평평하고 기온이 따뜻하며 물이 풍부한 곳이어야 합니다.",
+            rationale: "1960년대 이전 농업 사회에서는 농사 조건이 우수한 남서쪽 평야 지대에 인구가 밀집했습니다."
+        },
+        {
+            q: "1960년대 이후 도시를 중심으로 산업이 발달하면서 사람들이 일자리를 찾아 이동한 인구 흐름 현상을 무엇이라고 합니까?",
+            options: ["이촌향도", "귀농귀촌", "교외화", "지방 분산"],
+            answer: 0,
+            hint: "농촌(촌락)을 떠나(이) 도시를 향해(향) 이동했다는 뜻의 사자성어입니다.",
+            rationale: "산업화 시기 수많은 인구가 일자리를 구하기 위해 촌락에서 도시로 이동한 것을 이촌향도라 합니다."
+        },
+        {
+            q: "서울, 인천, 경기도를 통틀어 부르는 말로, 우리나라 전체 면적의 약 12%에 불과하지만 총인구의 절반 이상이 밀집된 이곳은 어디입니까?",
+            options: ["영남권", "호남권", "수도권", "충청권"],
+            answer: 2,
+            hint: "머리 수(首) 자를 쓰는, 나라의 중심 자리가 되는 도심 구역과 그 주변을 뜻합니다.",
+            rationale: "수도권은 서울, 인천, 경기를 포함하며 국토 면적의 12%이지만 인구의 50% 이상이 집중되어 있습니다."
+        },
+        {
+            q: "많은 청년층 인구와 기능들이 비수도권에서 수도권으로 과도하게 이동하는 주된 원인은 무엇입니까?",
+            options: ["수도권에 산지와 촌락 환경이 잘 보존되어 있어서", "수도권에 회사, 공장 등 양질의 일자리와 편의시설이 집중되어 있어서", "비수도권의 집값이 수도권보다 훨씬 비싸기 때문에", "비수도권에 대학과 공공 기관이 더 많이 생겨나서"],
+            answer: 1,
+            hint: "청년들이 직장을 구하고 직업 활동을 하기 편리한 인프라가 어디에 밀집해 있는지 보세요.",
+            rationale: "산업, 행정, 문화 인프라와 일자리가 수도권에 집중되어 청년층의 수도권 유출이 심화됩니다."
+        },
+        {
+            q: "인구의 과도한 밀집으로 인해 오늘날 '수도권' 지역 내에서 주로 겪고 있는 도시 문제로 알맞지 않은 것은 어느 것입니까?",
+            options: ["교통 혼잡 및 체증 발생", "쓰레기 배출량 증가와 환경 오염", "비싼 집값으로 인한 주거 불안정", "학생 수 부족으로 인한 학교 폐교 및 인구 감소 위기"],
+            answer: 3,
+            hint: "인구가 너무 많이 몰려서 터지는 문제와 인구가 없어서 사라지는 문제를 구분해야 합니다.",
+            rationale: "학생 수 부족과 인구 감소, 고령화 위기는 인구가 빠져나가는 '비수도권(촌락)'의 주요 문제입니다."
+        },
+        {
+            q: "지방의 인구 유출과 감소 위기를 막기 위해, 국가 권력이 집중된 비수도권의 여러 지역이 제 역할을 잃고 사라질 위험에 처한 현상을 뜻하는 말은 무엇입니까?",
+            options: ["지역 확대", "지역 소멸", "지역 발전", "지역 평등"],
+            answer: 1,
+            hint: "마을이나 지방 자치 단체가 인구 부족으로 아예 소멸해버릴 위기를 뜻합니다.",
+            rationale: "비수도권의 많은 지역은 인구 급감 및 고령화로 인해 '지역 소멸'이라는 심각한 위기를 맞고 있습니다."
+        },
+        {
+            q: "수도권 과밀화를 분산하고 국토의 균형 발전을 이루기 위해, 2012년 충청 지역에 세워져 정부 종합 청사와 공공 기관들이 이전한 행정중심복합도시는 어디입니까?",
+            options: ["세종특별자치시", "제주특별자치도", "대전광역시", "광주광역시"],
+            answer: 0,
+            hint: "조선 시대 세종대왕의 이름을 딴 특별자치시입니다.",
+            rationale: "정부는 국토 균형 발전을 위해 세종특별자치시를 건설하고 공공 기관 및 정부 청사를 이전했습니다."
+        }
+    ];
+
+    let currentIdx = 0;
+    let score = 0;
+    let isAnswered = false;
+    let usedHint = false;
+    // ▼ 결과를 받을 구글 앱스크립트 웹 앱 주소 / 단원 이름 / 출석번호 최대값
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzIFxtyj-l5FUZ-c5f74No9x3V_7Ghmn6HXcmwrnC0bQsG9n13yocMH3kljYQljSsIM/exec';
+    const UNIT_NAME = '사회 1학기 2단원 우리나라 지리 탐구';
+    const MAX_NUMBER = 30;
+    // ▲
+    let playerName = '', playerNumber = 0, records = [], currentShuffle = [], lastPayload = null, sent = false, sending = false;
+
+    const gameScreen = document.getElementById('game-screen');
+    const resultScreen = document.getElementById('result-screen');
+    const qText = document.getElementById('question-text');
+    const optionsBox = document.getElementById('options-box');
+    const qNumText = document.getElementById('question-number');
+    const scoreText = document.getElementById('score-display');
+    const progress = document.getElementById('progress');
+    const feedbackBox = document.getElementById('feedback-box');
+    const hintBox = document.getElementById('hint-box');
+    const nextBtn = document.getElementById('next-btn');
+
+    function initQuiz() {
+        isAnswered = false;
+        usedHint = false;
+        nextBtn.disabled = true;
+        feedbackBox.style.display = 'none';
+        hintBox.style.display = 'none';
+        
+        let currentQ = quizData[currentIdx];
+        qText.innerText = `${currentIdx + 1}. ${currentQ.q}`;
+        qNumText.innerText = `문제 ${currentIdx + 1} / ${quizData.length}`;
+        scoreText.innerText = `점수: ${score}점`;
+        progress.style.width = `${((currentIdx) / quizData.length) * 100}%`;
+        
+        optionsBox.innerHTML = '';
+        currentQ.options.forEach((opt, index) => {
+            const button = document.createElement('button');
+            button.className = 'option-btn';
+            button.innerText = opt;
+            button.onclick = () => checkAnswer(index, button);
+            optionsBox.appendChild(button);
+        });
+    }
+
+    function checkAnswer(selectedIdx, selectedBtn) {
+        if (isAnswered) return;
+        isAnswered = true;
+        
+        let currentQ = quizData[currentIdx];
+        const buttons = optionsBox.getElementsByClassName('option-btn');
+        records.push({ q: currentIdx + 1, selected: String(selectedIdx + 1), correct: selectedIdx === currentQ.answer, hint: usedHint });
+        
+        if (selectedIdx === currentQ.answer) {
+            selectedBtn.classList.add('correct');
+            if (usedHint) {
+                score += 2; // 힌트 사용 시 기본 4점에서 2점 차감
+                feedbackBox.innerHTML = `<strong>⭕ 정답입니다! (💡 힌트 사용 감점 -2점 적용)</strong><br>${currentQ.rationale}`;
+            } else {
+                score += 4; // 문제당 4점 (25문항 x 4점 = 100점 만점)
+                feedbackBox.innerHTML = `<strong>⭕ 정답입니다!</strong><br>${currentQ.rationale}`;
+            }
+        } else {
+            selectedBtn.classList.add('wrong');
+            buttons[currentQ.answer].classList.add('correct');
+            feedbackBox.innerHTML = `<strong>❌ 오답입니다. 해설을 확인해 보세요!</strong><br>${currentQ.rationale}`;
+        }
+        
+        scoreText.innerText = `점수: ${score}점`;
+        feedbackBox.style.display = 'block';
+        nextBtn.disabled = false;
+    }
+
+    function showHint() {
+        if (isAnswered) return;
+        usedHint = true;
+        hintBox.innerText = `💡 힌트: ${quizData[currentIdx].hint}`;
+        hintBox.style.display = 'block';
+    }
+
+    function nextQuestion() {
+        currentIdx++;
+        if (currentIdx < quizData.length) {
+            initQuiz();
+        } else {
+            showResult();
+        }
+    }
+
+    function showResult() {
+        gameScreen.style.display = 'none';
+        resultScreen.style.display = 'block';
+        document.getElementById('final-score').innerText = `${score} / 100점`;
+        
+        let comment = "";
+        if (score >= 90) comment = "🏅 완벽합니다! 우리나라의 기후와 지리, 인구 특징까지 모두 마스터한 최고의 '지리 탐구 박사'입니다!";
+        else if (score >= 70) comment = "👍 대단해요! 아깝게 틀린 문제들은 시험지 해설을 읽어보며 보완하면 완벽해질 것입니다.";
+        else comment = "📖 지리 단원은 용어 정리가 핵심입니다! 교과서 범위와 퀴즈 해설을 다시 읽어보고 재도전해 보세요!";
+        
+        document.getElementById('final-comment').innerText = comment;
+        const rs = document.querySelector('#result-screen .subtitle');
+        if (!rs.dataset.base) rs.dataset.base = rs.textContent;
+        rs.textContent = playerName + '님의 ' + rs.dataset.base;
+        lastPayload = { unit: UNIT_NAME, number: playerNumber, name: playerName, score: score, max: quizData.length * 4,
+            correctCount: records.filter(r => r.correct).length, clientTime: new Date().toISOString(), answers: records };
+        sent = false; sending = false;
+        sendResult();
+    }
+
+    function restartGame() {
+        currentIdx = 0;
+        score = 0;
+        records = [];
+        gameScreen.style.display = 'block';
+        resultScreen.style.display = 'none';
+        initQuiz();
+    }
+
+    // 문서 로드 완료 시 즉시 퀴즈가 구동되도록 설정
+    for (let n = 1; n <= MAX_NUMBER; n++) { const o = document.createElement('option'); o.value = n; o.textContent = n + '번'; document.getElementById('num-select').appendChild(o); }
+    document.getElementById('start-btn').addEventListener('click', () => {
+        const num = document.getElementById('num-select').value, typed = document.getElementById('name-input').value.trim();
+        const msg = document.getElementById('start-msg');
+        if (num === '') { msg.textContent = '출석번호를 골라 주세요.'; msg.hidden = false; return; }
+        if (typed === '') { msg.textContent = '이름을 입력해 주세요.'; msg.hidden = false; return; }
+        msg.hidden = true;
+        playerNumber = Number(num); playerName = typed;
+        document.getElementById('start-screen').style.display = 'none';
+        gameScreen.style.display = 'block';
+        initQuiz();
+    });
+    async function sendResult() {
+        const st = document.getElementById('send-status'), rb = document.getElementById('retry-btn');
+        if (sent || sending) return;
+        sending = true; rb.hidden = true;
+        st.className = 'send-status wait'; st.textContent = '결과를 선생님께 보내는 중이에요...';
+        try {
+            const res = await fetch(SCRIPT_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(lastPayload) });
+            const j = await res.json();
+            if (!j.ok) throw new Error(j.error || 'fail');
+            sent = true; st.className = 'send-status ok'; st.textContent = '✅ 결과가 선생님께 전달되었어요!';
+        } catch (e) {
+            st.className = 'send-status fail'; st.textContent = '⚠️ 결과를 보내지 못했어요. 인터넷 연결을 확인하고 [다시 보내기]를 눌러 주세요. 계속 안 되면 이 화면을 선생님께 보여 주세요.'; rb.hidden = false;
+        }
+        sending = false;
+    }
+    document.getElementById('retry-btn').addEventListener('click', sendResult);
+</script>
+</body>
+</html>

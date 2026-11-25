@@ -1,0 +1,448 @@
+
+
+
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>5학년 1학기 사회 [3단원: 법과 인권의 보장] 종합 퀴즈 게임</title>
+    <style>
+        :root {
+            --primary: #4A90E2;
+            --primary-dark: #357ABD;
+            --success: #2ECC71;
+            --danger: #E74C3C;
+            --background: #F5F7FA;
+            --card-bg: #FFFFFF;
+            --text: #2C3E50;
+        }
+        
+        * { box-sizing: border-box; font-family: 'Malgun Gothic', sans-serif; }
+        body { background-color: var(--background); color: var(--text); margin: 0; padding: 20px; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+        .quiz-container { background: var(--card-bg); width: 100%; max-width: 700px; padding: 30px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.08); }
+        h1 { text-align: center; color: var(--primary); font-size: 24px; margin-bottom: 5px; }
+        .subtitle { text-align: center; color: #7F8C8D; font-size: 14px; margin-bottom: 25px; }
+        .progress-bar { width: 100%; height: 10px; background-color: #ECF0F1; border-radius: 5px; margin-bottom: 25px; overflow: hidden; }
+        .progress { height: 100%; background-color: var(--primary); width: 0%; transition: width 0.3s ease; }
+        .stats { display: flex; justify-content: space-between; font-weight: bold; margin-bottom: 15px; font-size: 16px; }
+        .question-box { font-size: 18px; font-weight: bold; line-height: 1.6; margin-bottom: 25px; min-height: 60px; white-space: pre-line; }
+        .options-container { display: flex; flex-direction: column; gap: 12px; }
+        .option-btn { background: #F8F9FA; border: 2px solid #E2E8F0; border-radius: 12px; padding: 15px 20px; font-size: 16px; text-align: left; cursor: pointer; transition: all 0.2s; font-weight: 500; -webkit-tap-highlight-color: transparent; }
+        .option-btn:hover { background: #EDF2F7; border-color: #CBD5E0; }
+        .option-btn.correct { background-color: #D4EDDA !important; border-color: var(--success) !important; color: #155724; font-weight: bold; }
+        .option-btn.wrong { background-color: #F8D7DA !important; border-color: var(--danger) !important; color: #721C24; }
+        .hint-box { margin-top: 15px; padding: 12px; border-radius: 10px; background-color: #FEFCBF; border: 1px dashed #D69E2E; color: #744210; font-size: 14px; display: none; }
+        .control-panel { display: flex; justify-content: space-between; margin-top: 25px; }
+        .btn { background-color: var(--primary); color: white; border: none; border-radius: 10px; padding: 12px 25px; font-size: 16px; cursor: pointer; font-weight: bold; transition: background 0.2s; }
+        .btn:hover { background-color: var(--primary-dark); }
+        .btn:disabled { background-color: #CBD5E0; cursor: not-allowed; }
+        .feedback-box { margin-top: 20px; padding: 15px; border-radius: 12px; background-color: #EBF8FF; border-left: 5px solid var(--primary); display: none; line-height: 1.5; font-size: 15px; }
+        .result-screen { text-align: center; display: none; }
+        .result-score { font-size: 48px; font-weight: bold; color: var(--primary); margin: 20px 0; }
+        .comment { font-size: 18px; line-height: 1.6; margin-bottom: 30px; }
+        [hidden] { display: none !important; }
+        .field-label { display: block; text-align: left; font-weight: 700; font-size: 14px; color: #7F8C8D; margin: 16px 0 6px; }
+        .in-field { width: 100%; padding: 14px; font-size: 18px; border: 2px solid #E2E8F0; border-radius: 12px; background: #fff; }
+        .start-msg { color: var(--danger); font-weight: 700; font-size: 14px; margin-top: 12px; }
+        .send-status { font-size: 15px; font-weight: 700; margin: 0 0 14px; line-height: 1.5; }
+        .send-status.ok { color: #1E8449; }
+        .send-status.fail { color: var(--danger); }
+        .send-status.wait { color: #7F8C8D; }
+    </style>
+</head>
+<body>
+
+<div class="quiz-container" id="quiz-app">
+    <div id="start-screen">
+        <h1>이름을 알려 주세요 ✏️</h1>
+        <div class="subtitle">5학년 사회 단원평가</div>
+        <label class="field-label" for="num-select">출석번호</label>
+        <select id="num-select" class="in-field"><option value="">번호를 골라 주세요</option></select>
+        <label class="field-label" for="name-input">이름</label>
+        <input type="text" id="name-input" class="in-field" placeholder="이름을 입력해 주세요" maxlength="10" autocomplete="off">
+        <div class="start-msg" id="start-msg" role="alert" hidden></div>
+        <button class="btn" id="start-btn" style="width:100%;margin-top:10px">시작하기 ➔</button>
+    </div>
+    <div id="game-screen" style="display:none">
+        <h1 id="main-title">법과 인권 박사 도전! ⚖️</h1>
+        <div class="subtitle">5학년 1학기 사회: 3단원 법과 인권의 보장 종합 평가</div>
+        <div class="progress-bar"><div class="progress" id="progress"></div></div>
+        
+        <div class="stats">
+            <span id="question-number">문제 1 / 25</span>
+            <span id="score-display">점수: 0점</span>
+        </div>
+        
+        <div class="question-box" id="question-text">문제를 불러오는 중입니다...</div>
+        <div class="options-container" id="options-box"></div>
+        
+        <div class="hint-box" id="hint-box"></div>
+        
+        <div class="control-panel">
+            <button class="btn" id="hint-btn" onclick="showHint()">💡 힌트 보기 (-2점)</button>
+            <button class="btn" id="next-btn" onclick="nextQuestion()" disabled>다음 문제 ➔</button>
+        </div>
+
+        <div class="feedback-box" id="feedback-box"></div>
+    </div>
+
+    <div id="result-screen" class="result-screen">
+        <h1>🎉 법과 인권 탐험 완료! 🎉</h1>
+        <div class="subtitle">법과 인권의 보장 최종 결과</div>
+        <div class="result-score" id="final-score">100 / 100점</div>
+        <div class="comment" id="final-comment">멋집니다!</div>
+        <div class="send-status wait" id="send-status" role="status">결과를 선생님께 보내는 중이에요...</div>
+        <button class="btn" id="retry-btn" hidden style="margin-bottom:14px">다시 보내기</button><br>
+        <button class="btn" onclick="restartGame()">다시 도전하기 🔄</button>
+    </div>
+</div>
+
+<script>
+    // 미래엔 초등 사회 5-1 3단원 2회 시험지 고증 및 25문항 데이터셋
+    const quizData = [
+        {
+            q: "한 국가의 구성원이라면 반드시 지켜야 하는 강제성이 있는 사회 규범을 무엇이라고 합니까?",
+            options: ["도덕", "법", "풍습", "종교"],
+            answer: 1,
+            hint: "어기면 국가로부터 제재나 처벌을 받게 되는 강제적인 사회 규칙입니다.",
+            rationale: "한 국가의 구성원이라면 반드시 지켜야 하는 강제성이 있는 사회 규범은 '법'입니다."
+        },
+        {
+            q: "법을 지키지 않으면 안 되는 근본적인 이유로 가장 알맞은 표현은 무엇입니까?",
+            options: ["법은 개인의 양심만을 규제하기 때문에", "법은 강제성이 있는 사회 규범이기 때문에", "법은 스스로 원할 때만 지키는 풍습이기 때문에", "법은 아무런 벌칙이나 제재가 없기 때문에"],
+            answer: 1,
+            hint: "도덕과 달리 법을 어겼을 때 국가로부터 어떤 처벌을 받는지 연관 지어 생각해보세요.",
+            rationale: "법은 강제성이 있는 사회 규범이므로 지키지 않으면 국가로부터 제재를 받게 됩니다."
+        },
+        {
+            q: "다음 중 법의 역할에 대한 설명으로 알맞지 않은 것은 어느 것입니까?",
+            options: ["개인의 생명과 재산을 보호해 줍니다.", "사고나 범죄로부터 사람들을 안전하게 보호해 줍니다.", "환경을 보호하여 쾌적한 환경에서 살아갈 수 있게 해 줍니다.", "개인의 권리를 국가나 다른 사람에 의해 침해당했을 때 구제해 줍니다.", "힘이 센 사람이 자신이 하고 싶은 일을 마음대로 할 수 있도록 보장해 줍니다."],
+            answer: 4,
+            hint: "법은 모든 사람의 권리를 공평하게 보호하며, 힘이 강한 사람의 횡포를 막아줍니다.",
+            rationale: "법은 힘이 센 사람이 마음대로 행동하지 못하도록 통제하고 모든 사람의 권리와 사회 질서를 보호합니다."
+        },
+        {
+            q: "나라를 어떻게 꾸려 나갈 것인지, 국민의 기본적인 권리와 의무는 무엇인지 등을 정해 놓은 우리나라 최고의 법은 무엇입니까?",
+            options: ["민법", "형법", "상법", "헌법"],
+            answer: 3,
+            hint: "다른 모든 법의 바탕이 되는 국가의 가장 기본이자 으뜸인 법입니다.",
+            rationale: "헌법은 국가의 기본 조직과 국민의 기본권 및 의무를 정해 놓은 우리나라 최고의 법입니다."
+        },
+        {
+            q: "다음 중 인권에 대해 잘못 이야기한 친구는 누구입니까?",
+            options: ["세연: 사람이 태어나면서 당연히 가지는 권리야.", "정우: 피부색, 성별, 나이, 국적 등에 따라 다르게 보장돼.", "채은: 누구나 존중받으며 사람답게 살 기본적인 권리야.", "기현: 헌법에서 사람들이 인권을 누리는 것을 보장하고 있어."],
+            answer: 1,
+            hint: "인권은 특정 조건에 따라 다르게 차별을 두며 주어지는 것인지 생각해 보세요.",
+            rationale: "인권은 피부색, 성별, 나이, 국적 등에 관계없이 모든 사람이 동등하게 누릴 수 있어야 합니다."
+        },
+        {
+            q: "헌법에서 보장하는 국민의 권리(기본권) 내용으로 알맞지 않은 것은 어느 것입니까?",
+            options: ["법 앞에 평등하게 대우받을 권리", "국가의 정치에 참여할 수 있는 권리", "제한 없이 원하는 만큼 무조건 돈을 벌 수 있는 권리", "자유롭게 자신의 행복을 추구할 수 있는 권리", "국가에 인간다운 생활을 요구할 수 있는 복지적 권리"],
+            answer: 2,
+            hint: "기본권에는 자유와 평등, 정치 참여 등이 있으나 타인의 권리를 해치며 무제한으로 욕심을 부릴 권리는 없습니다.",
+            rationale: "헌법은 자유, 평등, 정치 참여, 사회 복지(인간다운 생활) 등을 기본 권리로 보장하지만, 타인의 권리를 침해하며 원하는 만큼 무한정 돈을 벌 권리를 보장하진 않습니다."
+        },
+        {
+            q: "다음 지문의 빈칸에 들어갈 알맞은 말들을 바르게 짝지은 것은 어느 것입니까?\n\n국가는 헌법에 규정된 인권을 다양한 (  (가)  )와/과 (  (나)  )을/를 통해 보장합니다.",
+            options: ["(가) 취미 - (나) 풍습", "(가) 도덕 - (나) 풍습", "(가) 법 - (나) 제도", "(가) 도덕 - (나) 제도"],
+            answer: 2,
+            hint: "국가가 인권을 확실히 지켜주기 위해 강제적인 규칙을 만들고 시스템을 구축하는 도구입니다.",
+            rationale: "국가는 헌법에 규정된 국민의 인권을 실질적으로 지키기 위해 다양한 법과 제도를 만들어 보장합니다."
+        },
+        {
+            q: "사람들의 인권을 보호하고 인권 침해 문제를 해결하기 위해 상담을 해주며, 우리 사회가 인권을 침해하지 못하도록 다양한 제도를 권고하는 독립적인 국가기관은 어디입니까?",
+            options: ["법원", "경찰청", "국가인권위원회", "국세청"],
+            answer: 2,
+            hint: "인권 보호를 전담으로 담당하는 국가의 대표적인 독립 위원회입니다.",
+            rationale: "사람들은 인권을 침해당했을 때 독립 기구인 국가인권위원회에 도움을 요청하고 구제받을 수 있습니다."
+        },
+        {
+            q: "사회에서 법을 지키지 않는 사람이 많아질 때 발생할 수 있는 부정적인 현상으로 알맞은 것을 고르세요.",
+            options: ["동네와 거리가 항상 깨끗하게 유지됩니다.", "다른 사람의 정당한 권리를 쉽게 침해할 수 있게 됩니다.", "장애인 등 사회적 약자가 더 안전하게 걸어 다닐 수 있습니다.", "질서가 완벽하게 유지되어 모두가 안전하게 살아갑니다."],
+            answer: 1,
+            hint: "법이 무너지면 규칙이 사라져 사회적 혼란이 오고 다른 이에게 피해를 주게 됩니다.",
+            rationale: "법을 지키지 않는 사람이 많아지면 타인의 권리가 침해당하고, 사회 질서가 유지되지 않아 안전하게 살아갈 수 없게 됩니다."
+        },
+        {
+            q: "다음 중 일상생활 속에서 우리가 가져야 할 올바른 인권 존중 태도로 볼 수 없는 것은 어느 것입니까?",
+            options: ["다른 사람의 입장이 되어 진심으로 생각하기", "상대방에게 배려와 응원이 담긴 따뜻한 말 사용하기", "나 자신이 가진 편견이나 차별적인 행동을 수시로 점검하기", "나의 편리함을 위해서라면 다른 사람의 권리는 무시하기"],
+            answer: 3,
+            hint: "모두의 인권을 지키기 위해서 나부터 행동을 어떻게 변화시켜야 할지 생각해보세요.",
+            rationale: "나부터 일상생활에서 타인을 배려하고 인권을 존중하는 태도를 실천해야 모두의 인권을 지킬 수 있습니다."
+        },
+        {
+            q: "다음 상황 중 명백한 인권 침해 상황에 해당하는 사례는 어느 것입니까?",
+            options: ["시각 장애인의 정당한 시험 시간을 일반인보다 1.5배 늘려준다.", "휠체어를 탄 사람이 경사로를 이용하여 투표소에 편리하게 들어간다.", "다른 사람들과 똑같이 고되게 일한 노동자가 외국인이라는 이유로 월급을 적게 받는다.", "어린이 보호 구역에서 학생들이 안전하게 다닐 수 있도록 차량 속도를 제한한다."],
+            answer: 2,
+            hint: "합리적인 이유 없이 국적, 신분, 장애 등을 원인으로 부당한 대우나 차별을 하는 상황을 찾아보세요.",
+            rationale: "외국인이라는 이유로 차별하여 월급을 적게 주는 것은 부당한 차별이자 심각한 인권 침해 상황입니다."
+        },
+        {
+            q: "회사의 직원이 출산을 앞두고 있을 때, 단지 '여성'이라는 이유만으로 승진에서 제외시키거나 퇴사를 강요하는 인권 침해 상황이 발생했다면, 이는 무엇을 이유로 차별한 것입니까?",
+            options: ["나이", "종교", "성별", "피부색", "출신 지역"],
+            answer: 2,
+            hint: "남성과 여성이라는 신체적, 생물학적 구분을 기준으로 차별을 한 상황입니다.",
+            rationale: "출산이나 임신을 이유로 여성을 부당하게 대우하는 것은 성별을 이유로 차별하여 평등의 인권을 침해한 모습입니다."
+        },
+        {
+            q: "인권 침해 문제가 발생하는 근본적인 원인을 가장 올바르게 짚어낸 친구는 누구입니까?",
+            options: ["은하: 사람들이 다른 대상에 대해 편견이나 고정 관념을 가지고 있기 때문이야.", "우람: 사회에 인권을 보장하는 법, 제도, 편의 시설이 너무 완벽하게 마련되어 있기 때문이야.", "민재: 사회 구성원들이 서로 지나치게 관심을 갖고 돕기 때문이야.", "수연: 모든 사람이 차별 없이 평등하다는 사실을 완벽히 인식하고 있기 때문이야."],
+            answer: 0,
+            hint: "잘못된 고정 인식이나 한쪽으로 치우친 생각이 차별과 침해를 유발합니다.",
+            rationale: "우리 사회에서 인권 침해가 일어나는 주요 원인 중 하나는 타인에 대한 편견이나 고정 관념 때문입니다."
+        },
+        {
+            q: "우리 사회에서 인권 침해 문제를 해결하려는 올바른 노력으로 적절하지 않은 행동은 어느 것입니까?",
+            options: ["인권을 철저히 보장하고 감시하는 법을 만듭니다.", "시민단체가 인권 보호의 중요성을 알리는 캠페인 활동을 합니다.", "내 일이 아니므로 인권을 침해당하는 이웃에게 관심을 가지지 않습니다.", "인권을 침해당한 취약 계층을 위해 사회 보장 제도를 시행합니다.", "인권을 보호하는 국가기관을 만들어 피해자를 적극적으로 돕습니다."],
+            answer: 2,
+            hint: "인권을 보호하려면 주변에서 일어나는 침해 사례에 지속적인 눈길과 관심이 필요합니다.",
+            rationale: "인권 침해를 해결하기 위해서는 우리 주변의 인권 침해 사례에 지속적인 관심을 가지고 귀를 기울여야 합니다."
+        },
+        {
+            q: "비장애인 학생들이 특수 안대를 쓰고 시각 장애인 안내 보도블록을 걷거나 안대를 쓴 채 물건을 찾아보는 활동을 통해 사회가 얻고자 하는 효과는 무엇입니까?",
+            options: ["장애인들의 생활 인프라를 전부 없애기 위함이다.", "인권 체험 활동을 열어 사회적 약자의 입장을 이해하고 인권에 대한 관심을 높이기 위함이다.", "장애인들에게 불편함을 직접 주기 위함이다.", "단순히 재미있는 놀이를 전파하기 위함이다."],
+            answer: 1,
+            hint: "상대방의 입장이 되어보는 '체험'을 통해 인권 감수성을 기르는 활동입니다.",
+            rationale: "우리 사회는 인권 체험 활동을 열어 비장애인이 장애인의 입장을 역지사지로 생각해보며 인권에 대한 관심을 높이고 있습니다."
+        },
+        {
+            q: "다음 지문에서 설명하는 행동은 인권 침해 문제를 탐구하고 해결하는 5단계 과정 중 어느 단계에 해당합니까?\n\n[ 인권 침해 문제와 관련된 여러 자료를 수집하고, 수집한 자료를 분석하여 문제가 일어난 구체적인 원인을 찾아봅니다. ]",
+            options: ["1단계: 인권 침해 문제 확인하기", "2단계: 인권 침해 문제가 발생한 원인 파악하기", "3단계: 인권 침해 문제를 해결할 방안 탐색하기", "4단계: 인권 침해 문제를 해결할 방안 검토하기", "5단계: 인권 침해 문제를 해결할 방안 실천하기"],
+            answer: 1,
+            hint: "자료를 분석하여 '왜(원인)' 이 문제가 생겼는지를 짚어내는 단계입니다.",
+            rationale: "문제의 원인을 살펴보고 분석하는 과정은 '인권 침해 문제가 발생한 원인 파악하기' 단계입니다."
+        },
+        {
+            q: "최근 심각해진 사이버 폭력 문제를 해결하는 방안 중 다음과 같은 장단점을 가진 해결책은 무엇입니까?\n\n• 장점: 누리 소통망(SNS)에서 무심코 하던 상처 주는 행동을 조심하게 됩니다.\n• 단점: 올바른 내용을 가르쳐 줄 외부 전문가 선생님 초청이 필요합니다.",
+            options: ["학급 규칙 스스로 만들기", "다른 수사 기관에 무조건 도움 요청하기", "학교에서 누리 소통망 사용법 및 인권 교육하기", "인터넷 사용을 전면 금지하기"],
+            answer: 2,
+            hint: "학생들에게 올바른 사용법과 규칙을 체계적으로 가르치는 '교육'과 관련이 있습니다.",
+            rationale: "누리 소통망 사용법 교육을 받으면 스스로의 행동을 조심하게 되지만, 전문 강사를 초청해야 하는 조율이 필요합니다."
+        },
+        {
+            q: "우리 주변의 인권 침해 문제를 해결하기 위한 방안을 실천할 때, 사회 구성원으로서 지녀야 할 올바른 마음가짐을 말한 친구는 누구입니까?",
+            options: ["서영: 해결 방안을 처음 제안한 사람 혼자서만 실천하면 돼.", "은준: 우리 모두가 주인 의식을 갖고 구체적인 계획을 세워서 실천해야 해.", "민우: 법률가나 높은 공무원들만 실천하면 되고 우리는 상관없어.", "지아: 계획 없이 그냥 내키는 대로 한 번만 행동하면 끝이야."],
+            answer: 1,
+            hint: "인권 침해 해결은 특정 소수만 하는 것인지, 모두가 함께 지속적으로 해야 하는 것인지 생각해보세요.",
+            rationale: "인권 침해 문제를 원만히 해결하고 실천하기 위해서는 사회 구성원 모두가 관심을 갖고 함께 실천해야 합니다."
+        },
+        {
+            q: "시민들이 자발적으로 모여 만든 '국제앰네스티'와 같은 인권 보호 단체에 정기적으로 저금통의 돈을 기부하는 활동은 무엇에 해당합니까?",
+            options: ["인권 단체에 기부 및 후원하기", "학교 인권 존중 포스터 그리기", "지방 자치 단체에 의견 제안하기", "길거리 인권 보호 캠페인 벌이기"],
+            answer: 0,
+            hint: "도움이 필요한 곳이나 인권 단체에 금전적, 물질적 도움을 나누어 주는 활동입니다.",
+            rationale: "인권 단체에 후원금을 기부하는 행동은 시민들이 직접 참여할 수 있는 대표적인 인권 보호 활동입니다."
+        },
+        {
+            q: "조선 시대나 근대 시기 어른들의 소유물처럼 여겨지던 어린이들을 독립된 인격체로 존중해야 함을 선언하고, 어린이날을 제정하는 데 평생을 바친 인물은 누구입니까?",
+            options: ["김구", "방정환", "유관순", "이황"],
+            answer: 1,
+            hint: "「어린이날 선언문」을 발표하고 어린이들에게 존댓말을 써 달라고 호소하셨던 분입니다.",
+            rationale: "소파 방정환 선생은 어린이날을 만들고 어린이 인권에 대한 사회적 인식을 대폭 개선하는 데 앞장섰습니다."
+        },
+        {
+            q: "다음 중 법과 도덕의 차이점에 대한 설명으로 올바른 것은 어느 것입니까?",
+            options: ["도덕은 어겼을 때 감옥에 갇히는 처벌을 받습니다.", "법은 마음속 양심의 가책만을 느끼게 하는 자율적 규칙입니다.", "법은 강제성이 있어 위반 시 국가의 제재를 받지만, 도덕은 양심이나 사회적 비난에 따릅니다.", "도덕과 법은 아무런 차이가 없는 똑같은 단어입니다."],
+            answer: 2,
+            hint: "강제성의 유무와 처벌 주체가 누구인지가 두 사회 규범의 가장 큰 차이점입니다.",
+            rationale: "법은 외적인 행동을 규제하고 어길 시 국가의 강제적 처벌을 받으나, 도덕은 인간 내면의 양심을 바탕으로 합니다."
+        },
+        {
+            q: "우리나라 최고의 법인 헌법이 개정되거나 법률이 헌법에 위반되는지 여부를 전문적으로 심판하여 국민의 기본권을 지켜주는 특수 재판소는 어디입니까?",
+            options: ["대법원", "지방법원", "헌법재판소", "가정법원"],
+            answer: 2,
+            hint: "이름 안에 우리나라의 최고 법 명칭인 '헌법'이 그대로 포함되어 있습니다.",
+            rationale: "헌법재판소는 법률이 헌법에 어긋나 국민의 인권을 침해하는지 심판하여 헌법의 가치를 수호하는 곳입니다."
+        },
+        {
+            q: "학교 공사나 공공건물을 지을 때, 계단 옆에 휠체어나 유모차가 올라갈 수 있도록 완만한 경사로를 필수로 설치하게 만드는 관련 법률의 제정 취지는 무엇입니까?",
+            options: ["건물의 외관 장식을 화려하게 만들기 위해서", "사회적 약자의 이동 권리를 보장하고 차별을 없애 인권을 보호하기 위해서", "일반 학생들의 장난을 유도하기 위해서", "건물의 건축 비용을 낭비하기 위해서"],
+            answer: 1,
+            hint: "장애인이나 노약자가 시설을 자유롭게 이용하도록 장벽을 없애는 노력입니다.",
+            rationale: "경사로나 승강기 설치는 장애인과 노약자 등의 기본적 권리와 이동권을 법과 제도로 보장하기 위한 사회적 약자 보호 조치입니다."
+        },
+        {
+            q: "다음 중 인권이 존중되는 정의로운 사회를 만들기 위해 초등학생인 우리가 일상생활에서 실천할 수 있는 일로 가장 알맞은 것은 무엇입니까?",
+            options: ["친구의 외모나 말투를 가지고 놀리며 장난치기", "학급에서 소외되거나 겉도는 친구가 없는지 살피고 따뜻하게 말 걸어주기", "인터넷 댓글창에 상대방을 비방하는 악성 댓글 달기", "학교 규칙이나 법은 나에게 불편하므로 무조건 무시하기"],
+            answer: 1,
+            hint: "나부터 친구를 아끼고 인격체로 존중하는 작은 행동이 정답입니다.",
+            rationale: "학교나 학급 내에서 소외되는 친구들을 배려하고 편견 없이 대하는 행동이 일상 속 인권 실천의 시작입니다."
+        },
+        {
+            q: "헌법에 기록된 국민의 권리를 온전히 누리기 위해서, 국민 역시 국가와 사회의 안전, 질서 유지를 위해 반드시 이행해야 하는 법적 책임들을 통틀어 무엇이라고 합니까?",
+            options: ["특권", "의무", "자유", "반칙"],
+            answer: 1,
+            hint: "교육, 납세, 국방, 근로 등 국민으로서 마땅히 해야 할 일을 뜻합니다.",
+            rationale: "국민의 권리와 '의무'는 동전의 양면과 같아서, 타인의 권리를 존중하고 사회를 유지하기 위해 의무를 성실히 다해야 합니다."
+        }
+    ];
+
+    let currentIdx = 0;
+    let score = 0;
+    let isAnswered = false;
+    let usedHint = false;
+    // ▼ 결과를 받을 구글 앱스크립트 웹 앱 주소 / 단원 이름 / 출석번호 최대값
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzIFxtyj-l5FUZ-c5f74No9x3V_7Ghmn6HXcmwrnC0bQsG9n13yocMH3kljYQljSsIM/exec';
+    const UNIT_NAME = '사회 1학기 3단원 법과 인권의 보장';
+    const MAX_NUMBER = 30;
+    // ▲
+    let playerName = '', playerNumber = 0, records = [], currentShuffle = [], lastPayload = null, sent = false, sending = false;
+    let shuffledOptions = [];
+    let shuffledAnswer = 0;
+
+    function shuffleArray(array) {
+        const arr = array.slice();
+        for (let i = arr.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [arr[i], arr[j]] = [arr[j], arr[i]];
+        }
+        return arr;
+    }
+
+    const gameScreen = document.getElementById('game-screen');
+    const resultScreen = document.getElementById('result-screen');
+    const qText = document.getElementById('question-text');
+    const optionsBox = document.getElementById('options-box');
+    const qNumText = document.getElementById('question-number');
+    const scoreText = document.getElementById('score-display');
+    const progress = document.getElementById('progress');
+    const feedbackBox = document.getElementById('feedback-box');
+    const hintBox = document.getElementById('hint-box');
+    const nextBtn = document.getElementById('next-btn');
+
+    function initQuiz() {
+        isAnswered = false;
+        usedHint = false;
+        nextBtn.disabled = true;
+        feedbackBox.style.display = 'none';
+        hintBox.style.display = 'none';
+        
+        let currentQ = quizData[currentIdx];
+        qText.innerText = `${currentIdx + 1}. ${currentQ.q}`;
+        qNumText.innerText = `문제 ${currentIdx + 1} / ${quizData.length}`;
+        scoreText.innerText = `점수: ${score}점`;
+        progress.style.width = `${((currentIdx) / quizData.length) * 100}%`;
+
+        // 선택지 순서를 매번 랜덤하게 섞고, 정답 인덱스도 함께 갱신
+        const indices = shuffleArray(currentQ.options.map((_, i) => i));
+        shuffledOptions = indices.map(i => currentQ.options[i]);
+        shuffledAnswer = indices.indexOf(currentQ.answer);
+        currentShuffle = indices;
+        
+        optionsBox.innerHTML = '';
+        shuffledOptions.forEach((opt, index) => {
+            const button = document.createElement('button');
+            button.className = 'option-btn';
+            button.innerText = opt;
+            button.onclick = () => checkAnswer(index, button);
+            optionsBox.appendChild(button);
+        });
+    }
+
+    function checkAnswer(selectedIdx, selectedBtn) {
+        if (isAnswered) return;
+        isAnswered = true;
+        
+        let currentQ = quizData[currentIdx];
+        const buttons = optionsBox.getElementsByClassName('option-btn');
+        records.push({ q: currentIdx + 1, selected: String(currentShuffle[selectedIdx] + 1), correct: selectedIdx === shuffledAnswer, hint: usedHint });
+        
+        if (selectedIdx === shuffledAnswer) {
+            selectedBtn.classList.add('correct');
+            if (usedHint) {
+                score += 2; // 힌트 사용 시 기본 4점에서 -2점 감점 적용
+                feedbackBox.innerHTML = `<strong>⭕ 정답입니다! (💡 힌트 사용 감점 -2점 적용)</strong><br>${currentQ.rationale}`;
+            } else {
+                score += 4; // 문제당 4점 (25문항 x 4점 = 100점 만점)
+                feedbackBox.innerHTML = `<strong>⭕ 정답입니다!</strong><br>${currentQ.rationale}`;
+            }
+        } else {
+            selectedBtn.classList.add('wrong');
+            buttons[shuffledAnswer].classList.add('correct');
+            feedbackBox.innerHTML = `<strong>❌ 오답입니다. 정답과 해설을 확인해 보세요!</strong><br>${currentQ.rationale}`;
+        }
+        
+        scoreText.innerText = `점수: ${score}점`;
+        feedbackBox.style.display = 'block';
+        nextBtn.disabled = false;
+    }
+
+    function showHint() {
+        if (isAnswered) return;
+        usedHint = true;
+        hintBox.innerText = `💡 힌트: ${quizData[currentIdx].hint}`;
+        hintBox.style.display = 'block';
+    }
+
+    function nextQuestion() {
+        currentIdx++;
+        if (currentIdx < quizData.length) {
+            initQuiz();
+        } else {
+            showResult();
+        }
+    }
+
+    function showResult() {
+        gameScreen.style.display = 'none';
+        resultScreen.style.display = 'block';
+        document.getElementById('final-score').innerText = `${score} / 100점`;
+        
+        let comment = "";
+        if (score >= 90) comment = "🏅 완벽합니다! 법의 가치와 국민의 인권 수호 규칙을 마스터한 최고의 '법과 인권 박사'입니다!";
+        else if (score >= 70) comment = "👍 대단해요! 헷갈렸던 문제들은 하단의 정답 해설을 다시 읽어보며 보완해 보세요.";
+        else comment = "📖 법과 인권 단원은 용어의 명확한 뜻이 중요해요! 다시 차근차근 풀면 반드시 100점을 맞을 수 있어요!";
+        
+        document.getElementById('final-comment').innerText = comment;
+        const rs = document.querySelector('#result-screen .subtitle');
+        if (!rs.dataset.base) rs.dataset.base = rs.textContent;
+        rs.textContent = playerName + '님의 ' + rs.dataset.base;
+        lastPayload = { unit: UNIT_NAME, number: playerNumber, name: playerName, score: score, max: quizData.length * 4,
+            correctCount: records.filter(r => r.correct).length, clientTime: new Date().toISOString(), answers: records };
+        sent = false; sending = false;
+        sendResult();
+    }
+
+    function restartGame() {
+        currentIdx = 0;
+        score = 0;
+        records = [];
+        gameScreen.style.display = 'block';
+        resultScreen.style.display = 'none';
+        initQuiz();
+    }
+
+    // 웹 문서가 로딩되는 즉시 첫 문제를 로드하여 대기 문구가 뜨는 현상을 완전히 방지합니다.
+    for (let n = 1; n <= MAX_NUMBER; n++) { const o = document.createElement('option'); o.value = n; o.textContent = n + '번'; document.getElementById('num-select').appendChild(o); }
+    document.getElementById('start-btn').addEventListener('click', () => {
+        const num = document.getElementById('num-select').value, typed = document.getElementById('name-input').value.trim();
+        const msg = document.getElementById('start-msg');
+        if (num === '') { msg.textContent = '출석번호를 골라 주세요.'; msg.hidden = false; return; }
+        if (typed === '') { msg.textContent = '이름을 입력해 주세요.'; msg.hidden = false; return; }
+        msg.hidden = true;
+        playerNumber = Number(num); playerName = typed;
+        document.getElementById('start-screen').style.display = 'none';
+        gameScreen.style.display = 'block';
+        initQuiz();
+    });
+    async function sendResult() {
+        const st = document.getElementById('send-status'), rb = document.getElementById('retry-btn');
+        if (sent || sending) return;
+        sending = true; rb.hidden = true;
+        st.className = 'send-status wait'; st.textContent = '결과를 선생님께 보내는 중이에요...';
+        try {
+            const res = await fetch(SCRIPT_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(lastPayload) });
+            const j = await res.json();
+            if (!j.ok) throw new Error(j.error || 'fail');
+            sent = true; st.className = 'send-status ok'; st.textContent = '✅ 결과가 선생님께 전달되었어요!';
+        } catch (e) {
+            st.className = 'send-status fail'; st.textContent = '⚠️ 결과를 보내지 못했어요. 인터넷 연결을 확인하고 [다시 보내기]를 눌러 주세요. 계속 안 되면 이 화면을 선생님께 보여 주세요.'; rb.hidden = false;
+        }
+        sending = false;
+    }
+    document.getElementById('retry-btn').addEventListener('click', sendResult);
+</script>
+</body>
+</html>
+
