@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>5학년 2학기 사회 2단원 퀴즈 게임</title>
+    <style>
+        :root {
+            --primary: #4A90E2;
+            --primary-dark: #357ABD;
+            --success: #2ECC71;
+            --danger: #E74C3C;
+            --background: #F5F7FA;
+            --card-bg: #FFFFFF;
+            --text: #2C3E50;
+        }
+
+        * { box-sizing: border-box; font-family: 'Malgun Gothic', sans-serif; }
+        body { background-color: var(--background); color: var(--text); margin: 0; padding: 20px; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+        .quiz-container { background: var(--card-bg); width: 100%; max-width: 700px; padding: 30px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.08); transition: all 0.3s ease; }
+        h1 { text-align: center; color: var(--primary); font-size: 24px; margin-bottom: 5px; }
+        .subtitle { text-align: center; color: #7F8C8D; font-size: 14px; margin-bottom: 25px; }
+        .progress-bar { width: 100%; height: 10px; background-color: #ECF0F1; border-radius: 5px; margin-bottom: 25px; overflow: hidden; }
+        .progress { height: 100%; background-color: var(--primary); width: 0%; transition: width 0.3s ease; }
+        .stats { display: flex; justify-content: space-between; font-weight: bold; margin-bottom: 15px; font-size: 16px; }
+        .question-box { font-size: 18px; font-weight: bold; line-height: 1.6; margin-bottom: 25px; min-height: 60px; }
+        .options-container { display: flex; flex-direction: column; gap: 12px; }
+        .option-btn { background: #F8F9FA; border: 2px solid #E2E8F0; border-radius: 12px; padding: 15px 20px; font-size: 16px; text-align: left; cursor: pointer; transition: all 0.2s; font-weight: 500; -webkit-tap-highlight-color: transparent; }
+        .option-btn:hover { background: #EDF2F7; border-color: #CBD5E0; }
+        .option-btn.correct { background-color: #D4EDDA !important; border-color: var(--success) !important; color: #155724; font-weight: bold; }
+        .option-btn.wrong { background-color: #F8D7DA !important; border-color: var(--danger) !important; color: #721C24; }
+        .hint-box { margin-top: 15px; padding: 12px; border-radius: 10px; background-color: #FEFCBF; border: 1px dashed #D69E2E; color: #744210; font-size: 14px; display: none; }
+        .control-panel { display: flex; justify-content: space-between; margin-top: 25px; }
+        .btn { background-color: var(--primary); color: white; border: none; border-radius: 10px; padding: 12px 25px; font-size: 16px; cursor: pointer; font-weight: bold; transition: background 0.2s; }
+        .btn:hover { background-color: var(--primary-dark); }
+        .btn:disabled { background-color: #CBD5E0; cursor: not-allowed; }
+        .feedback-box { margin-top: 20px; padding: 15px; border-radius: 12px; background-color: #EBF8FF; border-left: 5px solid var(--primary); display: none; line-height: 1.5; font-size: 15px; }
+        .result-screen { text-align: center; display: none; }
+        .result-score { font-size: 48px; font-weight: bold; color: var(--primary); margin: 20px 0; }
+        .comment { font-size: 18px; line-height: 1.6; margin-bottom: 30px; }
+        .start-screen { text-align: center; }
+        .start-icon { font-size: 56px; margin-bottom: 10px; }
+        .name-input { width: 100%; padding: 14px 16px; font-size: 16px; border: 2px solid #E2E8F0; border-radius: 12px; margin: 20px 0; text-align: center; font-weight: 500; }
+        .name-input:focus { outline: none; border-color: var(--primary); }
+        .start-btn { width: 100%; }
+        .player-name { color: var(--primary); }
+        [hidden] { display: none !important; }
+        .field-label { display: block; text-align: left; font-weight: 700; font-size: 14px; color: #7F8C8D; margin: 14px 0 -10px; }
+        .start-msg { color: var(--danger); font-weight: 700; font-size: 14px; margin: -8px 0 14px; }
+        .send-status { font-size: 15px; font-weight: 700; margin: 0 0 14px; line-height: 1.5; }
+        .send-status.ok { color: #1E8449; }
+        .send-status.fail { color: var(--danger); }
+        .send-status.wait { color: #7F8C8D; }
+    </style>
+</head>
+<body>
+
+<div class="quiz-container" id="quiz-app">
+    <div id="start-screen" class="start-screen">
+        <div class="start-icon">🏯</div>
+        <h1>달라지는 시대, 변화하는 생활 모습</h1>
+        <div class="subtitle">5학년 2학기 사회: 2단원 달라지는 시대, 변화하는 생활 모습</div>
+        <label class="field-label" for="num-select">출석번호</label>
+        <select id="num-select" class="name-input num-select"><option value="">번호를 골라 주세요</option></select>
+        <label class="field-label" for="name-input">이름</label>
+        <input type="text" id="name-input" class="name-input" placeholder="이름을 입력해 주세요" maxlength="10" autocomplete="off">
+        <div class="start-msg" id="start-msg" role="alert" hidden></div>
+        <button class="btn start-btn" onclick="startGame()">탐험 시작하기 🚀</button>
+    </div>
+
+    <div id="game-screen" style="display:none;">
+        <h1>달라지는 시대, 변화하는 생활 모습 🏯</h1>
+        <div class="subtitle">5학년 2학기 사회: 2단원 달라지는 시대, 변화하는 생활 모습</div>
+        <div class="progress-bar"><div class="progress" id="progress"></div></div>
+
+        <div class="stats">
+            <span id="question-number">문제 1 / 25</span>
+            <span id="score-display">점수: 0점</span>
+        </div>
+
+        <div class="question-box" id="question-text">문제가 여기에 나타납니다.</div>
+        <div class="options-container" id="options-box"></div>
+
+        <div class="hint-box" id="hint-box"></div>
+
+        <div class="control-panel">
+            <button class="btn" id="hint-btn" onclick="showHint()">💡 힌트 보기 (-2점)</button>
+            <button class="btn" id="next-btn" onclick="nextQuestion()" disabled>다음 문제 ➔</button>
+        </div>
+
+        <div class="feedback-box" id="feedback-box"></div>
+    </div>
+
+    <div id="result-screen" class="result-screen">
+        <h1>🎉 탐험 완료! 🎉</h1>
+        <div class="subtitle"><span class="player-name" id="result-name">탐험가</span>님의 달라지는 시대, 변화하는 생활 모습 단원평가 결과</div>
+        <div class="result-score" id="final-score">100 / 100</div>
+        <div class="comment" id="final-comment">멋집니다! 조선의 건국부터 근대의 변화까지 완벽하게 이해하고 있군요!</div>
+        <div class="send-status wait" id="send-status" role="status">결과를 선생님께 보내는 중이에요...</div>
+        <button class="btn" id="retry-btn" hidden style="margin-bottom:14px">다시 보내기</button><br>
+        <button class="btn" onclick="restartGame()">다시 도전하기 🔄</button>
+    </div>
+</div>
+
+<script>
+    const quizData = [
+        {
+            q: "다음 중 조선의 건국 과정을 순서대로 바르게 나열한 것은 어느 것입니까?",
+            options: ["명의 요동 지역 요구 → 이성계의 위화도 회군 → 이성계의 왕위 즉위", "이성계의 위화도 회군 → 명의 요동 지역 요구 → 이성계의 왕위 즉위", "이성계의 왕위 즉위 → 명의 요동 지역 요구 → 이성계의 위화도 회군", "이성계의 왕위 즉위 → 이성계의 위화도 회군 → 명의 요동 지역 요구", "이성계의 위화도 회군 → 이성계의 왕위 즉위 → 명의 요동 지역 요구"],
+            answer: 0,
+            hint: "명나라가 무리한 요구를 하자 이성계가 군대를 돌렸고(회군), 그 뒤에 왕이 되었어요.",
+            rationale: "조선의 건국은 '명이 고려 북쪽 지역을 자신들의 영토로 삼겠다고 함 → 이성계의 위화도 회군 → 이성계가 왕위에 오름' 순서로 이루어졌습니다."
+        },
+        {
+            q: "조선의 수도였던 한양이 도읍으로 좋았던 까닭으로 알맞은 것은 어느 것입니까?",
+            options: ["나라의 중앙에 위치하고 한강이 흘러 교통이 편리하며, 큰 산으로 둘러싸여 방어에 유리했습니다.", "바다와 맞닿아 있어 다른 나라와의 교역에만 유리했습니다.", "매우 추운 지역이라 적의 침입을 막기에 유리했습니다.", "나라의 가장 남쪽 끝에 있어 왜구의 침입을 막기 좋았습니다.", "넓은 평야가 없어 농사에는 적합하지 않았습니다."],
+            answer: 0,
+            hint: "나라 한가운데에 있으면서 강이 흐르고 산으로 둘러싸인 곳을 떠올려 보세요.",
+            rationale: "한양은 나라의 중앙에 위치해 교통이 편리했고 한강이 흘러 물자를 옮기기에 좋았으며, 큰 산으로 둘러싸여 있어 적을 방어하기에도 유리한 곳이었습니다."
+        },
+        {
+            q: "세종이 훈민정음을 만든 까닭으로 가장 알맞은 것은 어느 것입니까?",
+            options: ["한자를 몰라 어려움을 겪는 백성이 자신의 뜻을 쉽게 표현할 수 있도록 하기 위해서입니다.", "중국과의 무역에서만 사용할 새로운 문자가 필요했기 때문입니다.", "양반들이 더 어려운 글자를 익히도록 하기 위해서입니다.", "다른 나라에 문자를 수출하기 위해서입니다.", "불교 경전을 번역하는 승려들만 사용하도록 하기 위해서입니다."],
+            answer: 0,
+            hint: "한자는 배우기 어려워 글을 모르는 백성이 많았어요. 세종은 이런 백성들을 위해 무엇을 만들었을까요?",
+            rationale: "세종은 한자를 몰라 생활에 어려움을 겪는 백성을 위해 누구나 쉽게 배우고 쓸 수 있는 훈민정음을 창제하고 반포하였습니다."
+        },
+        {
+            q: "다음 중 세종 때 새로 만들어진 과학 기구가 아닌 것은 어느 것입니까?",
+            options: ["자격루(물시계)", "앙부일구(해시계)", "측우기(비가 내린 양을 재는 기구)", "첨성대(신라 시대에 만들어진 천문 관측 시설)", "혼천의(천체의 움직임을 관측하는 기구)"],
+            answer: 3,
+            hint: "이 시설은 세종보다 훨씬 오래전인 신라 시대에 만들어졌어요.",
+            rationale: "자격루, 앙부일구, 측우기, 혼천의는 세종 때 만들어진 과학 기구이지만, 첨성대는 신라 시대에 만들어진 천문 관측 시설입니다."
+        },
+        {
+            q: "여러 마을의 경험 많은 농민들에게 직접 농사법을 듣고 정리하여 만든, 조선 전기의 책은 무엇입니까?",
+            options: ["『경국대전』", "『농사직설』", "『향약집성방』", "『삼강행실도』", "『훈민정음 해례본』"],
+            answer: 1,
+            hint: "우리나라 환경에 맞는 농사법을 담은 책으로, 이름에 '농사'라는 말이 들어갑니다.",
+            rationale: "『농사직설』은 여러 마을의 경험 많은 농민들에게 직접 이야기를 들어 우리나라 환경에 맞는 농사법을 정리한 책입니다."
+        },
+        {
+            q: "유교를 중심으로 한 사회 질서를 유지하기 위해 만든, 조선의 기본 법전은 무엇입니까?",
+            options: ["『경국대전』", "『농사직설』", "『삼강행실도』", "『향약집성방』", "『훈민정음 해례본』"],
+            answer: 0,
+            hint: "나라를 다스리는 데 기본이 되는 법을 담은 책이에요.",
+            rationale: "『경국대전』은 유교를 중심으로 사회 질서를 유지하기 위한 내용을 담은 조선의 기본 법전입니다."
+        },
+        {
+            q: "조선 전기에 학문과 정책을 연구하고 여러 도서를 수집·보관하기 위해 세종 때 설치한 기관은 무엇입니까?",
+            options: ["집현전", "규장각", "성균관", "사간원", "홍문관"],
+            answer: 0,
+            hint: "훈민정음 창제에도 참여한 학자들이 모여 있던 기관이에요.",
+            rationale: "집현전은 조선 전기에 학문과 정책을 연구하고 책을 모아 보관하기 위해 세종 때 설치한 기관입니다."
+        },
+        {
+            q: "화원, 의관, 역관 등 전문 기술이나 지식을 가지고 활동했던 조선의 신분은 무엇입니까?",
+            options: ["양반", "중인", "상민", "천민", "왕족"],
+            answer: 1,
+            hint: "양반과 상민 사이에 있던 신분으로, 그림을 그리거나 병을 치료하거나 통역을 하는 등 전문적인 일을 했습니다.",
+            rationale: "화원, 의관, 역관 등은 중인에 해당하며, 농민·어민·상인·수공업자 등은 상민에 해당합니다."
+        },
+        {
+            q: "조선이 백성들에게 유교의 가르침을 알기 쉽게 전하기 위해 만들어 보급한 책은 무엇입니까?",
+            options: ["『경국대전』", "『동의보감』", "『삼강행실도』", "『향약집성방』", "『농사직설』"],
+            answer: 2,
+            hint: "임금과 신하, 부모와 자식, 남편과 아내 사이에 지켜야 할 도리를 그림과 함께 알기 쉽게 담았습니다.",
+            rationale: "조선은 백성이 유교의 가르침을 따를 수 있도록 『삼강행실도』를 만들어 보급하였습니다."
+        },
+        {
+            q: "임진왜란으로 조선이 입은 피해로 알맞지 않은 것은 어느 것입니까?",
+            options: ["많은 백성이 죽거나 다쳤습니다.", "국토가 황폐해져 생활이 어려워졌습니다.", "경복궁 등 중요한 건축물이 불에 타 없어졌습니다.", "많은 문화유산을 일본에 빼앗겼습니다.", "청과 신하와 임금의 관계를 맺게 되었습니다."],
+            answer: 4,
+            hint: "청과 임금과 신하의 관계를 맺게 된 것은 임진왜란이 아니라 다른 전쟁의 결과였어요.",
+            rationale: "임진왜란으로 많은 백성이 죽거나 다쳤고 국토가 황폐해졌으며 경복궁 등 건축물이 불타고 문화유산을 빼앗겼습니다. 청과 신하와 임금의 관계를 맺은 것은 병자호란의 결과입니다."
+        },
+        {
+            q: "청이 조선을 침입하자 왕이 남한산성으로 피란하여 대항했던 전쟁은 무엇입니까?",
+            options: ["임진왜란", "정유재란", "정묘호란", "병자호란", "신미양요"],
+            answer: 3,
+            hint: "이 전쟁의 결과 조선은 청과 임금과 신하의 관계를 맺게 되었습니다.",
+            rationale: "병자호란 때 인조는 남한산성으로 피란하여 청에 대항하였으나, 결국 청과 신하와 임금의 관계를 맺게 되었습니다."
+        },
+        {
+            q: "정묘호란과 병자호란의 결과에 대한 설명으로 알맞은 것은 어느 것입니까?",
+            options: ["정묘호란의 결과 조선은 후금과 형제 관계를 맺었습니다.", "정묘호란의 결과 조선은 일본과 형제 관계를 맺었습니다.", "병자호란의 결과 조선은 후금과 신하와 임금의 관계를 맺었습니다.", "병자호란의 결과 조선은 명과 신하와 임금의 관계를 맺었습니다.", "두 전쟁 모두 조선의 승리로 끝났습니다."],
+            answer: 0,
+            hint: "정묘호란은 형제 관계, 병자호란은 신하와 임금 관계를 맺게 된 전쟁이에요.",
+            rationale: "정묘호란의 결과 조선은 후금과 형제 관계를 맺었고, 병자호란의 결과 조선은 청과 신하와 임금의 관계를 맺게 되었습니다."
+        },
+        {
+            q: "붕당 간의 다툼을 줄이기 위해 탕평책을 실시하고 탕평비를 세운 왕은 누구입니까?",
+            options: ["세종", "영조", "정조", "인조", "태종"],
+            answer: 1,
+            hint: "이 왕의 뒤를 이은 손자도 탕평책을 이어받아 실시했지만, 탕평비를 세운 것은 이 왕입니다.",
+            rationale: "영조는 탕평책을 실시하고 탕평비를 세워 붕당 간의 다툼을 줄이고자 하였습니다. 수원 화성을 건설한 왕은 정조입니다."
+        },
+        {
+            q: "다음 중 정조가 한 일로 알맞지 않은 것은 어느 것입니까?",
+            options: ["탕평책을 실시하였습니다.", "규장각을 세워 학자들이 학문을 연구하게 하였습니다.", "수원 화성을 건설하였습니다.", "격쟁 제도를 활용하여 백성의 억울한 사연을 들어주었습니다.", "신문고 제도를 부활하였습니다."],
+            answer: 4,
+            hint: "억울한 일을 북을 쳐서 알리는 이 제도를 다시 시행한 왕은 정조가 아니라 영조입니다.",
+            rationale: "정조는 탕평책 실시, 규장각 설치, 수원 화성 건설, 격쟁 제도 활용 등을 하였습니다. 신문고 제도를 부활한 것은 영조입니다."
+        },
+        {
+            q: "우리나라의 산맥, 하천, 도로 등을 자세히 표현했으며 접어서 들고 다닐 수 있었던, 김정호가 만든 지도는 무엇입니까?",
+            options: ["혼일강리역대국도지도", "대동여지도", "곤여만국전도", "동국지도", "팔도지도"],
+            answer: 1,
+            hint: "김정호가 만든 이 지도는 이름에 '대동'이 들어가며, 휴대하기 편리하게 만들어졌습니다.",
+            rationale: "김정호는 우리나라의 산맥, 하천, 도로 등을 자세하게 표현한 「대동여지도」를 만들었으며, 접을 수 있어 들고 다니기 편리했습니다."
+        },
+        {
+            q: "조선 후기에 판소리, 탈놀이, 민화, 한글 소설과 같은 서민 문화가 발달할 수 있었던 배경으로 알맞은 것은 어느 것입니까?",
+            options: ["경제적으로 여유가 생긴 백성들이 문화와 예술에 관심을 갖게 되었기 때문입니다.", "나라에서 서민들에게 문화 활동을 의무적으로 강요했기 때문입니다.", "양반들이 서민 문화를 직접 만들어 보급했기 때문입니다.", "외국의 문화가 그대로 들어와 유행했기 때문입니다.", "신분 제도가 완전히 사라졌기 때문입니다."],
+            answer: 0,
+            hint: "살림살이가 조금 넉넉해진 백성들이 무엇에 관심을 갖게 되었을까요?",
+            rationale: "조선 후기에는 경제적으로 여유가 생긴 백성도 문화와 예술에 관심을 가지면서 판소리, 탈놀이, 민화, 한글 소설 등 다양한 서민 문화가 발달하였습니다."
+        },
+        {
+            q: "탈을 쓰고 하는 연극으로, 주로 양반 사회를 비판하는 내용이 많아 서민들에게 인기를 얻었던 조선 후기의 공연은 무엇입니까?",
+            options: ["판소리", "탈놀이", "민화", "한글 소설", "사군자화"],
+            answer: 1,
+            hint: "얼굴에 쓰는 가면을 이용해 하는 놀이입니다.",
+            rationale: "탈놀이는 탈을 쓰고 하는 연극으로, 주로 양반 사회를 비판하는 내용이 많아 서민들에게 큰 인기를 얻었습니다."
+        },
+        {
+            q: "서민들의 생활 모습을 정감 있게 표현한 「씨름도」를 그린 화가는 누구입니까?",
+            options: ["김홍도", "신윤복", "정선", "안견", "장승업"],
+            answer: 0,
+            hint: "이 화가는 서민들의 씨름, 서당, 대장간 같은 생활 모습을 즐겨 그렸습니다.",
+            rationale: "김홍도는 「씨름도」 등을 통해 서민들의 생활 모습을 정감 있게 표현하였습니다. 신윤복은 주로 양반 사회에 대한 풍자와 여성들의 생활을 소재로 그림을 그렸습니다."
+        },
+        {
+            q: "흥선 대원군이 세도 정치의 잘못된 점을 바로잡고 백성의 생활을 안정시키기 위해 추진한 정책으로 알맞지 않은 것은 어느 것입니까?",
+            options: ["서원을 정리하였습니다.", "양반에게도 세금을 거두었습니다.", "경복궁을 다시 지었습니다(중건).", "규장각을 세워 학자들이 학문을 연구하게 하였습니다.", "세도 정치 세력의 힘을 약화시켰습니다."],
+            answer: 3,
+            hint: "학자들이 모여 학문을 연구하던 이 기관은 흥선 대원군이 아니라 정조가 세웠습니다.",
+            rationale: "흥선 대원군은 서원 정리, 양반에게도 세금 징수, 경복궁 중건 등의 개혁을 추진하였습니다. 규장각을 세운 것은 정조입니다."
+        },
+        {
+            q: "병인양요와 신미양요를 겪은 뒤, 흥선 대원군이 서양과 교류하지 않겠다는 뜻을 밝히기 위해 전국 각지에 세운 비석은 무엇입니까?",
+            options: ["탕평비", "순수비", "척화비", "광개토대왕릉비", "신도비"],
+            answer: 2,
+            hint: "'화친을 배척한다'는 뜻을 담은 비석으로, 서양과 교류하지 않겠다는 의지를 나타냈습니다.",
+            rationale: "병인양요와 신미양요 이후 흥선 대원군은 전국 각지에 척화비를 세워 서양과 교류하지 않겠다는 뜻을 굳건히 하였습니다."
+        },
+        {
+            q: "1876년 일본의 강요로 조선이 개항하게 된 계기가 된 조약은 무엇입니까?",
+            options: ["강화도 조약", "을사늑약", "한일 병합 조약", "제물포 조약", "톈진 조약"],
+            answer: 0,
+            hint: "이 조약을 맺은 지역의 이름이 조약 이름에 들어가 있습니다.",
+            rationale: "조선은 일본의 강요로 1876년 강화도 조약을 맺고 개항하였습니다."
+        },
+        {
+            q: "김옥균 등이 청에 의지하는 세력을 몰아내고 근대적 개혁을 추진하고자 일본의 지원을 약속받고 일으켰으나, 청 군대의 개입으로 실패한 사건은 무엇입니까?",
+            options: ["갑신정변", "병인양요", "신미양요", "을미사변", "동학 농민 운동"],
+            answer: 0,
+            hint: "갑신년에 일어난 정치적 변란이라는 뜻의 이름을 가진 사건입니다.",
+            rationale: "김옥균 등은 청에 의지하는 세력을 몰아내고 근대적 개혁을 추진하고자 갑신정변을 일으켰지만, 청 군대의 개입으로 실패하였습니다."
+        },
+        {
+            q: "노비 문서를 불태우고 천한 신분에 대한 대우를 개선하자고 주장한 것에서 알 수 있듯이, 동학 농민군이 원했던 사회의 모습으로 가장 알맞은 것은 무엇입니까?",
+            options: ["신분 차별이 없는 사회", "왕의 권한이 더욱 강해지는 사회", "외국 군대가 조선을 다스리는 사회", "양반의 수가 더욱 늘어나는 사회", "오직 무역만으로 살아가는 사회"],
+            answer: 0,
+            hint: "노비 문서를 불태웠다는 것은 신분에 따른 차별을 없애고 싶어 했다는 뜻이겠지요?",
+            rationale: "노비 문서를 불태우고 천한 신분의 대우를 개선한다는 내용을 통해 동학 농민군이 신분 차별이 없는 사회를 원하였음을 알 수 있습니다."
+        },
+        {
+            q: "신분제와 과거제를 폐지하고, 공식 문서에 한글을 함께 사용하도록 한 개혁은 무엇입니까?",
+            options: ["갑신정변", "갑오개혁", "위정척사 운동", "을미개혁의 단발령", "강화도 조약"],
+            answer: 1,
+            hint: "이 개혁으로 오랫동안 이어져 온 신분 제도와 과거 시험 제도가 사라졌습니다.",
+            rationale: "갑오개혁으로 신분제와 과거제를 폐지하고, 공식 문서에 한글을 함께 사용하도록 하였습니다."
+        },
+        {
+            q: "독립문을 세우고, 누구나 자신의 생각을 말할 수 있는 만민 공동회를 연 단체는 무엇입니까?",
+            options: ["독립 협회", "동학 농민군", "갑신정변 세력", "위정척사파", "집현전"],
+            answer: 0,
+            hint: "자주독립의 상징으로 독립문을 세운 단체입니다.",
+            rationale: "독립 협회는 자주독립의 상징으로 독립문을 세웠으며, 누구나 자신의 생각을 말할 수 있는 만민 공동회를 열었습니다."
+        }
+    ];
+
+    let currentIdx = 0;
+    let score = 0;
+    let isAnswered = false;
+    let usedHint = false;
+    let currentAnswerIdx = 0; // 현재 문제에서 정답이 실제로 놓인 화면상의 위치(매번 섞임)
+    let playerName = '탐험가';
+    // ▼ 결과를 받을 구글 앱스크립트 웹 앱 주소 / 단원 이름 / 출석번호 최대값
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzIFxtyj-l5FUZ-c5f74No9x3V_7Ghmn6HXcmwrnC0bQsG9n13yocMH3kljYQljSsIM/exec';
+    const UNIT_NAME = '사회 2단원 달라지는 시대';
+    const MAX_NUMBER = 30;
+    // ▲
+    let playerNumber = 0, records = [], currentShuffle = [], lastPayload = null, sent = false, sending = false;
+
+    const startScreen = document.getElementById('start-screen');
+    const nameInput = document.getElementById('name-input');
+    const gameScreen = document.getElementById('game-screen');
+    const resultScreen = document.getElementById('result-screen');
+    const resultName = document.getElementById('result-name');
+    const qText = document.getElementById('question-text');
+    const optionsBox = document.getElementById('options-box');
+    const qNumText = document.getElementById('question-number');
+    const scoreText = document.getElementById('score-display');
+    const progress = document.getElementById('progress');
+    const feedbackBox = document.getElementById('feedback-box');
+    const hintBox = document.getElementById('hint-box');
+    const nextBtn = document.getElementById('next-btn');
+
+    // 배열을 무작위로 섞어 새 배열을 반환합니다 (Fisher-Yates shuffle).
+    function shuffleArray(array) {
+        const arr = array.slice();
+        for (let i = arr.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [arr[i], arr[j]] = [arr[j], arr[i]];
+        }
+        return arr;
+    }
+
+    function startGame() {
+        const num = document.getElementById('num-select').value, typed = nameInput.value.trim();
+        const msg = document.getElementById('start-msg');
+        if (num === '') { msg.textContent = '출석번호를 골라 주세요.'; msg.hidden = false; return; }
+        if (typed === '') { msg.textContent = '이름을 입력해 주세요.'; msg.hidden = false; return; }
+        msg.hidden = true;
+        playerNumber = Number(num);
+        playerName = typed;
+        startScreen.style.display = 'none';
+        gameScreen.style.display = 'block';
+        initQuiz();
+    }
+
+    nameInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') startGame();
+    });
+
+    function initQuiz() {
+        isAnswered = false;
+        usedHint = false;
+        nextBtn.disabled = true;
+        feedbackBox.style.display = 'none';
+        hintBox.style.display = 'none';
+
+        let currentQ = quizData[currentIdx];
+        qText.innerText = `${currentIdx + 1}. ${currentQ.q}`;
+        qNumText.innerText = `문제 ${currentIdx + 1} / ${quizData.length}`;
+        scoreText.innerText = `점수: ${score}점`;
+        progress.style.width = `${((currentIdx) / quizData.length) * 100}%`;
+
+        // 선택지 순서를 문제가 나올 때마다 무작위로 섞습니다.
+        const originalIndices = currentQ.options.map((opt, idx) => idx);
+        const shuffledIndices = shuffleArray(originalIndices);
+        currentAnswerIdx = shuffledIndices.indexOf(currentQ.answer);
+        currentShuffle = shuffledIndices;
+
+        optionsBox.innerHTML = '';
+        shuffledIndices.forEach((originalIdx, displayIdx) => {
+            const button = document.createElement('button');
+            button.className = 'option-btn';
+            button.innerText = currentQ.options[originalIdx];
+            button.onclick = () => checkAnswer(displayIdx, button);
+            optionsBox.appendChild(button);
+        });
+    }
+
+    function checkAnswer(selectedIdx, selectedBtn) {
+        if (isAnswered) return;
+        isAnswered = true;
+
+        let currentQ = quizData[currentIdx];
+        const buttons = optionsBox.getElementsByClassName('option-btn');
+        records.push({ q: currentIdx + 1, selected: String(currentShuffle[selectedIdx] + 1), correct: selectedIdx === currentAnswerIdx, hint: usedHint });
+
+        if (selectedIdx === currentAnswerIdx) {
+            selectedBtn.classList.add('correct');
+
+            if (usedHint) {
+                score += 2;
+                feedbackBox.innerHTML = `<strong>⭕ 정답입니다! (힌트 사용 -2점 감점 적용)</strong><br>${currentQ.rationale}`;
+            } else {
+                score += 4;
+                feedbackBox.innerHTML = `<strong>⭕ 정답입니다!</strong><br>${currentQ.rationale}`;
+            }
+        } else {
+            selectedBtn.classList.add('wrong');
+            buttons[currentAnswerIdx].classList.add('correct');
+            feedbackBox.innerHTML = `<strong>❌ 아쉬워요!</strong><br>${currentQ.rationale}`;
+        }
+
+        scoreText.innerText = `점수: ${score}점`;
+        feedbackBox.style.display = 'block';
+        nextBtn.disabled = false;
+    }
+
+    function showHint() {
+        if (isAnswered) return;
+        usedHint = true;
+        hintBox.innerText = `💡 힌트: ${quizData[currentIdx].hint}`;
+        hintBox.style.width = "auto";
+        hintBox.style.display = 'block';
+    }
+
+    function nextQuestion() {
+        currentIdx++;
+        if (currentIdx < quizData.length) {
+            initQuiz();
+        } else {
+            showResult();
+        }
+    }
+
+    function showResult() {
+        gameScreen.style.display = 'none';
+        resultScreen.style.display = 'block';
+        resultName.innerText = playerName;
+        document.getElementById('final-score').innerText = `${score} / 100점`;
+
+        let comment = "";
+        if (score >= 92) comment = `🏅 완벽해요! ${playerName}님을 달라지는 시대, 변화하는 생활 모습의 달인으로 임명합니다!`;
+        else if (score >= 70) comment = `👍 훌륭합니다, ${playerName}님! 헷갈렸던 문제들의 해설을 한 번 더 읽어보세요!`;
+        else comment = `📖 ${playerName}님, 조금 더 공부해 볼까요? 다시 풀면 훨씬 더 잘할 수 있어요!`;
+
+        document.getElementById('final-comment').innerText = comment;
+        lastPayload = { unit: UNIT_NAME, number: playerNumber, name: playerName, score: score, max: quizData.length * 4,
+            correctCount: records.filter(r => r.correct).length, clientTime: new Date().toISOString(), answers: records };
+        sent = false; sending = false;
+        sendResult();
+    }
+
+    function restartGame() {
+        currentIdx = 0;
+        score = 0;
+        records = [];
+        gameScreen.style.display = 'block';
+        resultScreen.style.display = 'none';
+        initQuiz();
+    }
+
+    for (let n = 1; n <= MAX_NUMBER; n++) { const o = document.createElement('option'); o.value = n; o.textContent = n + '번'; document.getElementById('num-select').appendChild(o); }
+    async function sendResult() {
+        const st = document.getElementById('send-status'), rb = document.getElementById('retry-btn');
+        if (sent || sending) return;
+        if (!SCRIPT_URL) { st.className = 'send-status fail'; st.textContent = '⚠️ 전송 주소가 설정되지 않았어요. 이 화면을 선생님께 보여 주세요.'; return; }
+        sending = true; rb.hidden = true;
+        st.className = 'send-status wait'; st.textContent = '결과를 선생님께 보내는 중이에요...';
+        try {
+            const res = await fetch(SCRIPT_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(lastPayload) });
+            const j = await res.json();
+            if (!j.ok) throw new Error(j.error || 'fail');
+            sent = true; st.className = 'send-status ok'; st.textContent = '✅ 결과가 선생님께 전달되었어요!';
+        } catch (e) {
+            st.className = 'send-status fail'; st.textContent = '⚠️ 결과를 보내지 못했어요. 인터넷 연결을 확인하고 [다시 보내기]를 눌러 주세요. 계속 안 되면 이 화면을 선생님께 보여 주세요.'; rb.hidden = false;
+        }
+        sending = false;
+    }
+    document.getElementById('retry-btn').addEventListener('click', sendResult);
+
+    // 첫 실행은 이름 입력 화면에서 시작하며, startGame() 호출 시 initQuiz()가 실행됩니다.
+</script>
+</body>
+</html>
