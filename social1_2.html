@@ -423,5 +423,39 @@
     }
     document.getElementById('retry-btn').addEventListener('click', sendResult);
 </script>
+<script>
+/* 시험은 최대 3회차까지만 (서버 기록 기준) */
+(function () {
+  var MAXA = 3;
+  var sleep = function (ms) { return new Promise(function (r) { setTimeout(r, ms); }); };
+  async function attempts(num) {
+    try {
+      var r = await fetch(SCRIPT_URL + '?action=count&unit=' + encodeURIComponent(UNIT_NAME) + '&number=' + encodeURIComponent(num));
+      var j = await r.json();
+      return j.ok ? Number(j.count) : null;
+    } catch (e) { return null; }
+  }
+  var origStart = window.startGame, origRestart = window.restartGame, busy = false;
+  if (origStart) window.startGame = async function () {
+    if (busy) return;
+    var sel = document.getElementById('num-select'), msg = document.getElementById('start-msg');
+    if (!sel || sel.value === '') return origStart();
+    busy = true;
+    var c = await attempts(sel.value);
+    busy = false;
+    if (c !== null && c >= MAXA) {
+      msg.textContent = sel.value + '번은 이미 ' + MAXA + '번 모두 응시했어요. 더 이상 볼 수 없어요. (번호를 잘못 골랐다면 다시 골라 주세요)';
+      msg.hidden = false; return;
+    }
+    origStart();
+  };
+  if (origRestart) window.restartGame = async function () {
+    for (var i = 0; i < 20; i++) { if (typeof sending !== 'undefined' && sending) await sleep(300); else break; }
+    var c = await attempts(typeof playerNumber !== 'undefined' ? playerNumber : '');
+    if (c !== null && c >= MAXA) { alert(MAXA + '번 모두 응시했어요. 더 이상 다시 도전할 수 없어요.'); return; }
+    origRestart();
+  };
+})();
+</script>
 </body>
 </html>
